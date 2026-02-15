@@ -1,1 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexical Decision Task (48 Trials)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    #container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .stimulus {
+      font-family: Arial, sans-serif;
+      font-size: 40px;
+      font-weight: bold;
+      line-height: 1.2;
+      min-height: 60px;
+    }
+    #fixation {
+      font-size: 60px;
+      margin: 20px 0;
+    }
+    #word1 { margin-bottom: 10px; }
+    #word2 { margin-top: 10px; }
+    #feedback {
+      color: green;
+      font-size: 32px;
+    }
+    #feedback.error {
+      color: red;
+    }
+    button {
+      margin: 10px;
+      font-size: 18px;
+      padding: 12px 24px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #f0f0f0;
+    }
+    input {
+      font-size: 18px;
+      padding: 10px;
+      text-align: center;
+      width: 100px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    #progress {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <!-- Participant ID screen -->
+    <div id="start-screen">
+      <h1>Lexical Decision Task (48 Trials)</h1>
+      <p>Enter your 3-digit participant number (000–999):</p>
+      <input type="text" id="participant-id" maxlength="3" pattern="[0-9]{3}">
+      <br><br>
+      <button id="start-btn" type="button">Start Experiment</button>
+      <p id="id-error" class="error"></p>
+    </div>
+
+    <!-- Instructions -->
+    <div id="instruction-screen" class="hidden">
+      <h2>Instructions</h2>
+      <p>There are 48 trials. On each trial:</p>
+      <p>You will see a fixation cross (+), then two words.</p>
+      <p>Decide whether the <strong>second</strong> item is a real word or a nonword.</p>
+      <p>Press <strong>A</strong> if the second item is a WORD.</p>
+      <p>Press <strong>L</strong> if the second item is a NONWORD.</p>
+      <p>Respond as quickly and accurately as possible (max 2 seconds).</p>
+      <p><strong>Press the SPACEBAR to begin.</strong></p>
+    </div>
+
+    <!-- Task display -->
+    <div id="task-screen" class="hidden">
+      <div id="progress"></div>
+      <div id="fixation" class="stimulus"></div>
+      <div id="word1" class="stimulus"></div>
+      <div id="word2" class="stimulus"></div>
+      <div id="feedback" class="stimulus"></div>
+      <p style="font-size: 20px; margin-top: 20px;">
+        WORD: <strong>A</strong> &nbsp; | &nbsp; NONWORD: <strong>L</strong>
+      </p>
+    </div>
+
+    <!-- End screen -->
+    <div id="end-screen" class="hidden">
+      <h2>Task Complete!</h2>
+      <p>All 48 trials are finished. You can download your results or restart the experiment.</p>
+      <div>
+        <button id="download-btn" type="button">Download CSV</button>
+        <button id="restart-btn" type="button">Restart Experiment</button>
+      </div>
+      <p id="download-info"></p>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------
+    // Stimuli (48 trials)
+    // -------------------------
+    const baseTrials = [
+      // RELATED (code 1)
+      {word1: "DOCTOR", word2: "NURSE",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "BUTTER", word2: "BREAD",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "NIGHT",  word2: "DARK",   condition: "related",   code: 1, correctKey: "a"},
+      {word1: "TABLE",  word2: "CHAIR",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "CAT",    word2: "DOG",    condition: "related",   code: 1, correctKey: "a"},
+      {word1: "KING",   word2: "QUEEN",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "FLOUR",  word2: "BREAD",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "COTTAGE",word2: "CHEESE", condition: "related",   code: 1, correctKey: "a"},
+      {word1: "PINE",   word2: "TREE",   condition: "related",   code: 1, correctKey: "a"},
+      {word1: "SALMON", word2: "FISH",   condition: "related",   code: 1, correctKey: "a"},
+      {word1: "WHISKEY",word2: "VODKA",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "HUNGRY", word2: "EAT",    condition: "related",   code: 1, correctKey: "a"},
+      {word1: "SUMMER", word2: "HOT",    condition: "related",   code: 1, correctKey: "a"},
+      {word1: "MONEY",  word2: "CASH",   condition: "related",   code: 1, correctKey: "a"},
+      {word1: "BLACK",  word2: "WHITE",  condition: "related",   code: 1, correctKey: "a"},
+      {word1: "COFFEE", word2: "TEA",    condition: "related",   code: 1, correctKey: "a"},
+
+      // UNRELATED (code 2)
+      {word1: "TREE",   word2: "DOCTOR", condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "BREAD",  word2: "DOCTOR", condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "NURSE",  word2: "BUTTER", condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "CHAIR",  word2: "NIGHT",  condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "DOG",    word2: "TABLE",  condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "QUEEN",  word2: "CAT",    condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "FISH",   word2: "KING",   condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "VODKA",  word2: "FLOUR",  condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "CHEESE", word2: "COTTAGE",condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "EAT",    word2: "PINE",   condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "HOT",    word2: "SALMON", condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "CASH",   word2: "WHISKEY",condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "WHITE",  word2: "HUNGRY", condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "TEA",    word2: "SUMMER", condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "DARK",   word2: "MONEY",  condition: "unrelated", code: 2, correctKey: "a"},
+      {word1: "BLACK",  word2: "COFFEE", condition: "unrelated", code: 2, correctKey: "a"},
+
+      // NONWORD (code 3)
+      {word1: "DOCTOR",  word2: "FLIPO",   condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "SOAM",    word2: "GLOVE",   condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "NART",    word2: "TRIEF",   condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "PLAME",   word2: "WINE",    condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "BLINT",   word2: "CRABLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "FROKE",   word2: "SPLIM",   condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "QUINK",   word2: "ZORBY",   condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "THRANG",  word2: "WUMPLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "CLABBER", word2: "DINGLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "FLUNDER", word2: "GLOP",    condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "HISSOP",  word2: "JANGLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "KLOPP",   word2: "MIRKLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "NIMBLE",  word2: "PLODDER", condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "QUORBLE", word2: "RIMPLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "SPLORCH", word2: "TINGLE",  condition: "nonword", code: 3, correctKey: "l"},
+      {word1: "VLOBBER", word2: "WUNK",    condition: "nonword", code: 3, correctKey: "l"}
+    ];
+
+    // -------------------------
+    // State
+    // -------------------------
+    let participantID = "";
+    let trials = [];
+    let currentTrialIndex = 0;
+    let trialStartTime = 0;
+    let responseDeadline = 2000;
+    let keyListenerActive = false;
+    let results = [];
+
+    const screens = {
+      start: document.getElementById("start-screen"),
+      instructions: document.getElementById("instruction-screen"),
+      task: document.getElementById("task-screen"),
+      end: document.getElementById("end-screen")
+    };
+
+    const participantInput = document.getElementById("participant-id");
+    const startBtn = document.getElementById("start-btn");
+    const idError = document.getElementById("id-error");
+    const fixationEl = document.getElementById("fixation");
+    const word1El = document.getElementById("word1");
+    const word2El = document.getElementById("word2");
+    const feedbackEl = document.getElementById("feedback");
+    const progressEl = document.getElementById("progress");
+    const downloadBtn = document.getElementById("download-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const downloadInfo = document.getElementById("download-info");
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.add("hidden"));
+      screens[name].classList.remove("hidden");
+    }
+
+    function validateID(id) {
+      return /^[0-9]{3}$/.test(id);
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function resetTaskState() {
+      trials = baseTrials.slice();
+      shuffleArray(trials);
+      currentTrialIndex = 0;
+      results = [];
+      keyListenerActive = false;
+      trialStartTime = 0;
+      clearStimuli();
+      updateProgress();
+    }
+
+    function clearStimuli() {
+      fixationEl.textContent = "";
+      word1El.textContent = "";
+      word2El.textContent = "";
+      feedbackEl.textContent = "";
+      feedbackEl.classList.remove("error");
+    }
+
+    function updateProgress() {
+      if (!trials.length) {
+        progressEl.textContent = "";
+      } else {
+        progressEl.textContent = `Trial ${currentTrialIndex + 1} / ${trials.length}`;
+      }
+    }
+
+    // -------------------------
+    // Flow
+    // -------------------------
+    startBtn.addEventListener("click", () => {
+      const id = participantInput.value.trim();
+      if (!validateID(id)) {
+        idError.textContent = "Please enter a valid 3-digit ID (000–999).";
+        return;
+      }
+      participantID = id;
+      idError.textContent = "";
+      showScreen("instructions");
+      // Remove focus from button to avoid spacebar "clicking" it
+      startBtn.blur();
+    });
+
+    function startExperiment() {
+      resetTaskState();
+      showScreen("task");
+      runNextTrial();
+    }
+
+    function runNextTrial() {
+      if (currentTrialIndex >= trials.length) {
+        showScreen("end");
+        return;
+      }
+      clearStimuli();
+      updateProgress();
+      const trial = trials[currentTrialIndex];
+
+      // Fixation (500 ms)
+      fixationEl.textContent = "+";
+      setTimeout(() => {
+        fixationEl.textContent = "";
+        // Blank (500 ms)
+        setTimeout(() => {
+          word1El.textContent = trial.word1;
+          word2El.textContent = trial.word2;
+          trialStartTime = performance.now();
+          keyListenerActive = true;
+
+          // Deadline
+          setTimeout(() => {
+            if (keyListenerActive) {
+              finishTrial(trial, null, null, "TOO_SLOW");
+            }
+          }, responseDeadline);
+        }, 500);
+      }, 500);
+    }
+
+    function finishTrial(trial, key, rt, status) {
+      keyListenerActive = false;
+
+      if (!status) {
+        status = (key === trial.correctKey) ? "CORRECT" : "INCORRECT";
+      }
+
+      results.push({
+        participant: participantID,
+        blockname: "main",
+        tablerow: currentTrialIndex + 1,
+        word1: trial.word1,
+        word2: trial.word2,
+        condition: trial.condition,
+        code: trial.code,
+        key: key || "",
+        rt: rt ? Math.round(rt) : "",
+        status: status
+      });
+
+      if (status === "CORRECT") {
+        feedbackEl.textContent = "Correct!";
+        setTimeout(() => {
+          feedbackEl.textContent = "";
+          currentTrialIndex++;
+          runNextTrial();
+        }, 500);
+      } else {
+        feedbackEl.classList.add("error");
+        feedbackEl.textContent = "Wrong response or too slow!";
+        setTimeout(() => {
+          feedbackEl.textContent = "";
+          feedbackEl.classList.remove("error");
+          currentTrialIndex++;
+          runNextTrial();
+        }, 1500);
+      }
+    }
+
+    // -------------------------
+    // Global key handler
+    // -------------------------
+    document.addEventListener("keydown", (e) => {
+      // Always prevent spacebar from scrolling or clicking buttons
+      if (e.code === "Space") {
+        e.preventDefault();
+      }
+
+      // If on instruction screen, spacebar starts the task
+      if (!screens.instructions.classList.contains("hidden") &&
+          screens.task.classList.contains("hidden") &&
+          screens.start.classList.contains("hidden")) {
+        if (e.code === "Space") {
+          startExperiment();
+          return;
+        }
+      }
+
+      // If task is active, capture A/L responses
+      if (!screens.task.classList.contains("hidden") && keyListenerActive) {
+        if (e.code === "KeyA" || e.code === "KeyL") {
+          const trial = trials[currentTrialIndex];
+          const key = (e.code === "KeyA") ? "a" : "l";
+          const rt = performance.now() - trialStartTime;
+          finishTrial(trial, key, rt, null);
+        }
+      }
+    });
+
+    // -------------------------
+    // CSV
+    // -------------------------
+    function makeCSV() {
+      const headers = [
+        "participant","blockname","tablerow",
+        "word1","word2","condition","code",
+        "key","rt","status"
+      ];
+      const rows = results.map(r =>
+        headers.map(h => `"${String(r[h] ?? "").replace(/"/g, '""')}"`)
+      );
+      const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      // BOM for Excel
+      return "\uFEFF" + csv;
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      if (!results.length) return;
+      const csv = makeCSV();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const filename = `lexical_${participantID}.csv`;
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      downloadInfo.textContent = `Results downloaded as ${filename}.`;
+    });
+
+    restartBtn.addEventListener("click", () => {
+      participantID = "";
+      participantInput.value = "";
+      idError.textContent = "";
+      showScreen("start");
+      participantInput.focus();
+    });
+
+    // Initial focus
+    participantInput.focus();
+  </script>
+</body>
+</html>
 
